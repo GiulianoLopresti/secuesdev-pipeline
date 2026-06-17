@@ -29,6 +29,7 @@ pipeline {
                 sh '''
                     docker rm -f ${CONTAINER_NAME} || true
                     docker run -d -p 5000:5000 --name ${CONTAINER_NAME} ${IMAGE_NAME}
+                    docker network connect secuesdev-net ${CONTAINER_NAME} || true
                 '''
             }
         }
