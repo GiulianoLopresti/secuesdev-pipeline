@@ -37,10 +37,8 @@ pipeline {
                 echo 'Ejecutando escaneo de seguridad con OWASP ZAP...'
                 sh '''
                     mkdir -p zap-reports
-                    docker rm -f zap-temp || true
-                    docker run --network secuesdev-net --name zap-temp ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t http://${CONTAINER_NAME}:5000 -r zap-report.html || true
-                    docker cp zap-temp:/zap/wrk/zap-report.html zap-reports/zap-report.html || true
-                    docker rm -f zap-temp || true
+                    docker run --rm -v $(pwd)/zap-reports:/zap/wrk/:rw alpine chmod -R 777 /zap/wrk
+                    docker run --rm --network secuesdev-net -v $(pwd)/zap-reports:/zap/wrk/:rw ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t http://${CONTAINER_NAME}:5000 -r zap-report.html || true
                 '''
             }
         }
