@@ -36,7 +36,6 @@ pipeline {
                 '''
             }
         }
-    }
 
         stage('Security Scan - OWASP ZAP') {
             steps {
@@ -44,14 +43,11 @@ pipeline {
                 sh '''
                     mkdir -p zap-reports
                     chmod 777 zap-reports
-                    docker run --rm --network secuesdev-net \
-                        -v $(pwd)/zap-reports:/zap/wrk/:rw \
-                        ghcr.io/zaproxy/zaproxy:stable \
-                        zap-baseline.py -t http://${CONTAINER_NAME}:5000 \
-                        -r zap-report.html || true
+                    docker run --rm --network secuesdev-net -v $(pwd)/zap-reports:/zap/wrk/:rw ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t http://${CONTAINER_NAME}:5000 -r zap-report.html || true
                 '''
             }
         }
+    }
 
     post {
         always {
