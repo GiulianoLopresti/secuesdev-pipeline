@@ -43,7 +43,7 @@ pipeline {
                 sh '''
                     mkdir -p zap-reports
                     chmod 777 zap-reports
-                    docker run --rm --network secuesdev-net -v $(pwd)/zap-reports:/zap/wrk/:rw ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t http://${CONTAINER_NAME}:5000 -r zap-report.html || true
+                    docker run --rm --network secuesdev-net -u 1000:1000 -v $(pwd)/zap-reports:/zap/wrk/:rw ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t http://${CONTAINER_NAME}:5000 -r zap-report.html || true
                 '''
             }
         }
