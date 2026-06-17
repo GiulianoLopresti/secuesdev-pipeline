@@ -21,7 +21,7 @@ pipeline {
                     docker rm -f test-container || true
                     docker run -d -p 5050:5000 --name test-container ${IMAGE_NAME}
                     sleep 5
-                    curl -f http://localhost:5050 || exit 1
+                    docker run --rm --link test-container:app curlimages/curl -f http://app:5000
                     docker rm -f test-container
                 '''
             }
