@@ -1,11 +1,9 @@
 pipeline {
     agent any
-
     environment {
         IMAGE_NAME = 'secuesdev-app'
         CONTAINER_NAME = 'secuesdev-app-prod'
     }
-
     stages {
         stage('Build') {
             steps {
@@ -13,7 +11,6 @@ pipeline {
                 sh 'docker build -t ${IMAGE_NAME} ./app'
             }
         }
-
         stage('Test') {
             steps {
                 echo 'Ejecutando pruebas basicas...'
@@ -26,7 +23,6 @@ pipeline {
                 '''
             }
         }
-
         stage('Deploy') {
             steps {
                 echo 'Desplegando la aplicacion a produccion...'
@@ -36,19 +32,19 @@ pipeline {
                 '''
             }
         }
-
         stage('Security Scan - OWASP ZAP') {
             steps {
                 echo 'Ejecutando escaneo de seguridad con OWASP ZAP...'
                 sh '''
                     mkdir -p zap-reports
-                    chmod 777 zap-reports
-                    docker run --rm --network secuesdev-net -u 1000:1000 -v $(pwd)/zap-reports:/zap/wrk/:rw ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t http://${CONTAINER_NAME}:5000 -r zap-report.html || true
+                    docker rm -f zap-temp || true
+                    docker run --network secuesdev-net --name zap-temp ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t http://${CONTAINER_NAME}:5000 -r zap-report.html || true
+                    docker cp zap-temp:/zap/wrk/zap-report.html zap-reports/zap-report.html || true
+                    docker rm -f zap-temp || true
                 '''
             }
         }
     }
-
     post {
         always {
             archiveArtifacts artifacts: 'zap-reports/*.html', allowEmptyArchive: true
