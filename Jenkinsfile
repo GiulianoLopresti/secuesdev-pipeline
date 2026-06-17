@@ -38,7 +38,25 @@ pipeline {
         }
     }
 
+        stage('Security Scan - OWASP ZAP') {
+            steps {
+                echo 'Ejecutando escaneo de seguridad con OWASP ZAP...'
+                sh '''
+                    mkdir -p zap-reports
+                    chmod 777 zap-reports
+                    docker run --rm --network secuesdev-net \
+                        -v $(pwd)/zap-reports:/zap/wrk/:rw \
+                        ghcr.io/zaproxy/zaproxy:stable \
+                        zap-baseline.py -t http://${CONTAINER_NAME}:5000 \
+                        -r zap-report.html || true
+                '''
+            }
+        }
+
     post {
+        always {
+            archiveArtifacts artifacts: 'zap-reports/*.html', allowEmptyArchive: true
+        }
         success {
             echo 'Pipeline completado exitosamente.'
         }
