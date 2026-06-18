@@ -4,6 +4,20 @@ import os
 
 app = Flask(__name__)
 
+@app.after_request
+def add_security_headers(response):
+    # Corrige: Missing Anti-clickjacking Header
+    response.headers['X-Frame-Options'] = 'DENY'
+    # Corrige: X-Content-Type-Options Header Missing
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    # Corrige: Content Security Policy (CSP) Header Not Set
+    response.headers['Content-Security-Policy'] = "default-src 'self'"
+    # Corrige: Permissions Policy Header Not Set
+    response.headers['Permissions-Policy'] = 'geolocation=(), microphone=(), camera=()'
+    # Ayuda a mitigar: Server Leaks Version Information
+    response.headers['Server'] = 'SecueDevServer'
+    return response
+
 # CORRECCION 1: el secreto ya no esta hardcodeado, se lee desde una variable de entorno
 API_SECRET_KEY = os.environ.get('API_SECRET_KEY', '')
 
