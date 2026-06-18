@@ -1,10 +1,11 @@
-from flask import Flask, request, render_template_string
+from flask import Flask, request, render_template_string, escape
 import sqlite3
+import os
 
 app = Flask(__name__)
 
-# VULNERABILIDAD 1: Secreto hardcodeado en el codigo
-API_SECRET_KEY = "sk_live_12345supersecreto"
+# CORRECCION 1: el secreto ya no esta hardcodeado, se lee desde una variable de entorno
+API_SECRET_KEY = os.environ.get('API_SECRET_KEY', '')
 
 def get_db_connection():
     conn = sqlite3.connect('usuarios.db')
@@ -25,11 +26,11 @@ def home():
 def buscar_usuario():
     nombre = request.args.get('nombre', '')
 
-    # VULNERABILIDAD 2: SQL Injection
-    # El input del usuario se concatena directo en la query, sin sanitizar
+    # CORRECCION 2: SQL Injection corregido usando consulta parametrizada
+    # El input del usuario nunca se concatena directo en el string SQL
     conn = get_db_connection()
-    query = "SELECT * FROM usuarios WHERE nombre = '" + nombre + "'"
-    cursor = conn.execute(query)
+    query = "SELECT * FROM usuarios WHERE nombre = ?"
+    cursor = conn.execute(query, (nombre,))
     resultados = cursor.fetchall()
     conn.close()
 
@@ -37,12 +38,12 @@ def buscar_usuario():
 
 @app.route('/saludo')
 def saludo():
-    # VULNERABILIDAD 3: XSS reflejado
-    # El input se inserta directo en el HTML sin escapar
+    # CORRECCION 3: XSS corregido escapando el input antes de insertarlo en HTML
     nombre = request.args.get('nombre', 'invitado')
-    template = f"<h2>Hola, {nombre}!</h2>"
+    nombre_seguro = escape(nombre)
+    template = f"<h2>Hola, {nombre_seguro}!</h2>"
     return render_template_string(template)
 
 if __name__ == '__main__':
     init_db()
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=False)
